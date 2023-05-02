@@ -1,102 +1,102 @@
-dari telethon.sync impor TelegramClient
-dari telethon.tl.functions.messages impor GetDialogsRequest
-dari telethon.tl.types mengimpor InputPeerEmpty
-impor os, sys
-impor configparser
-impor csv
-waktu impor
+from telethon.sync import TelegramClient
+from telethon.tl.functions.messages import GetDialogsRequest
+from telethon.tl.types import InputPeerEmpty
+import os, sys
+import configparser
+import csv
+import time
 
 re="\033[1;31m"
 gr="\033[1;32m"
 cy="\033[1;36m"
 
-def spanduk():
-    cetak(f"""
-{re}╔╦╗{cy}┌─┐┬ ┌─┐{re}╔═╗ ╔═╗{cy}┌─┐┬─┐┌─┐┌─┐┌─┐┬─┐
-{re} ║ {cy}├┤ │ ├┤ {re}║ ╦ ╚═╗{cy}│ ├┬┘├─┤├─┘├┤ ├┬┘
-{re} ╩ {cy}└─┘┴─┘└─┘{re}╚═╝ ╚═╝{cy}└─┘┴└─┴ ┴┴ └─┘┴└─
+def banner():
+    print(f"""
+{re}╔╦╗{cy}┌─┐┬  ┌─┐{re}╔═╗  ╔═╗{cy}┌─┐┬─┐┌─┐┌─┐┌─┐┬─┐
+{re} ║ {cy}├┤ │  ├┤ {re}║ ╦  ╚═╗{cy}│  ├┬┘├─┤├─┘├┤ ├┬┘
+{re} ╩ {cy}└─┘┴─┘└─┘{re}╚═╝  ╚═╝{cy}└─┘┴└─┴ ┴┴  └─┘┴└─
 
-            versi : 3.1
+            version : 3.1
 youtube.com/channel/UCnknCgg_3pVXS27ThLpw3xQ
         """)
 
 cpass = configparser.RawConfigParser()
-cpass.baca('config.data')
+cpass.read('config.data')
 
-mencoba:
+try:
     api_id = cpass['cred']['id']
     api_hash = cpass['cred']['hash']
-    telepon = cpass['cred']['telepon']
-    klien = TelegramClient(telepon, api_id, api_hash)
-kecuali KeyError:
-    os.system('hapus')
-    spanduk()
-    print(re+"[!] jalankan python3 setup.py dulu!!\n")
-    sys.keluar(1)
+    phone = cpass['cred']['phone']
+    client = TelegramClient(phone, api_id, api_hash)
+except KeyError:
+    os.system('clear')
+    banner()
+    print(re+"[!] run python3 setup.py first !!\n")
+    sys.exit(1)
 
-klien.sambungkan()
-jika bukan client.is_user_authorized():
-    client.send_code_request(telepon)
-    os.system('hapus')
-    spanduk()
-    client.sign_in(phone, input(gr+'[+] Masukkan kode: '+re))
+client.connect()
+if not client.is_user_authorized():
+    client.send_code_request(phone)
+    os.system('clear')
+    banner()
+    client.sign_in(phone, input(gr+'[+] Enter the code: '+re))
  
-os.system('hapus')
-spanduk()
-obrolan = []
-last_date = Tidak ada
+os.system('clear')
+banner()
+chats = []
+last_date = None
 chunk_size = 200
-grup=[]
+groups=[]
  
-hasil = klien(GetDialogsRequest(
-             offset_date=tanggal_terakhir,
+result = client(GetDialogsRequest(
+             offset_date=last_date,
              offset_id=0,
              offset_peer=InputPeerEmpty(),
-             batas=potongan_ukuran,
+             limit=chunk_size,
              hash = 0
          ))
-obrolan.memperpanjang(hasil.obrolan)
+chats.extend(result.chats)
  
-untuk obrolan dalam obrolan:
-    mencoba:
-        jika chat.megagroup== Benar:
-            grup.tambahkan(obrolan)
-    kecuali:
-        melanjutkan
+for chat in chats:
+    try:
+        if chat.megagroup== True:
+            groups.append(chat)
+    except:
+        continue
  
-print(gr+'[+] Pilih grup untuk mengikis anggota :'+re)
-saya=0
-untuk g dalam grup:
+print(gr+'[+] Choose a group to scrape members :'+re)
+i=0
+for g in groups:
     print(gr+'['+cy+str(i)+gr+']'+cy+' - '+ g.title)
-    saya+=1
+    i+=1
  
-mencetak('')
-g_index = input(gr+"[+] Masukkan Angka : "+re)
-target_group=grup[int(g_index)]
+print('')
+g_index = input(gr+"[+] Enter a Number : "+re)
+target_group=groups[int(g_index)]
  
-print(gr+'[+] Mengambil Anggota...')
-waktu.tidur(1)
-semua_peserta = []
-all_participants = client.get_participants(target_group, agresif=Benar)
+print(gr+'[+] Fetching Members...')
+time.sleep(1)
+all_participants = []
+all_participants = client.get_participants(target_group, aggressive=True)
  
-print(gr+'[+] Menyimpan Dalam file...')
-waktu.tidur(1)
-dengan open("members.csv","w",encoding='UTF-8') sebagai f:
-    penulis = csv.penulis(f,pembatas=",",lineterminator="\n")
-    writer.writerow(['username','user id', 'akses hash','name','group', 'group id'])
-    untuk pengguna di all_participants:
-        jika pengguna. nama pengguna:
-            nama pengguna = pengguna. nama pengguna
-        kalau tidak:
-            nama pengguna = ""
-        jika pengguna.nama_pertama:
-            nama_pertama= pengguna.nama_pertama
-        kalau tidak:
-            nama_depan= ""
-        jika pengguna.nama_belakang:
-            last_name= pengguna.nama_belakang
-        kalau tidak:
-            nama_belakang= ""
-        nama= (nama_pertama + ' ' + nama_belakang).strip()
-        writer.writerow([nama pengguna,user.id,user.access_hash,nama,target_group.title, target_group.id])      
-print(gr+'[+] Anggota berhasil tergores.')
+print(gr+'[+] Saving In file...')
+time.sleep(1)
+with open("members.csv","w",encoding='UTF-8') as f:
+    writer = csv.writer(f,delimiter=",",lineterminator="\n")
+    writer.writerow(['username','user id', 'access hash','name','group', 'group id'])
+    for user in all_participants:
+        if user.username:
+            username= user.username
+        else:
+            username= ""
+        if user.first_name:
+            first_name= user.first_name
+        else:
+            first_name= ""
+        if user.last_name:
+            last_name= user.last_name
+        else:
+            last_name= ""
+        name= (first_name + ' ' + last_name).strip()
+        writer.writerow([username,user.id,user.access_hash,name,target_group.title, target_group.id])      
+print(gr+'[+] Members scraped successfully.')
