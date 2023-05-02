@@ -1,123 +1,123 @@
 #!/bin/env python3
-dari telethon.sync impor TelegramClient
-dari telethon.tl.functions.messages impor GetDialogsRequest
-dari telethon.tl.types impor InputPeerEmpty, InputPeerChannel, InputPeerUser
-dari telethon.errors.rpcerrorlist impor PeerFloodError, UserPrivacyRestrictedError
-dari telethon.tl.functions.channels impor InviteToChannelRequest
-impor configparser
-impor os, sys
-impor csv
-impor traceback
-waktu impor
-impor acak
+from telethon.sync import TelegramClient
+from telethon.tl.functions.messages import GetDialogsRequest
+from telethon.tl.types import InputPeerEmpty, InputPeerChannel, InputPeerUser
+from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError
+from telethon.tl.functions.channels import InviteToChannelRequest
+import configparser
+import os, sys
+import csv
+import traceback
+import time
+import random
 
 re="\033[1;31m"
 gr="\033[1;32m"
 cy="\033[1;36m"
 
-def spanduk():
-    cetak(f"""
-{re}╔╦╗{cy}┌─┐┬ ┌─┐{re}╔═╗ ╔═╗{cy}┌─┐┬─┐┌─┐┌─┐┌─┐┬─┐
-{re} ║ {cy}├┤ │ ├┤ {re}║ ╦ ╚═╗{cy}│ ├┬┘├─┤├─┘├┤ ├┬┘
-{re} ╩ {cy}└─┘┴─┘└─┘{re}╚═╝ ╚═╝{cy}└─┘┴└─┴ ┴┴ └─┘┴└─
+def banner():
+    print(f"""
+{re}╔╦╗{cy}┌─┐┬  ┌─┐{re}╔═╗  ╔═╗{cy}┌─┐┬─┐┌─┐┌─┐┌─┐┬─┐
+{re} ║ {cy}├┤ │  ├┤ {re}║ ╦  ╚═╗{cy}│  ├┬┘├─┤├─┘├┤ ├┬┘
+{re} ╩ {cy}└─┘┴─┘└─┘{re}╚═╝  ╚═╝{cy}└─┘┴└─┴ ┴┴  └─┘┴└─
 
-            versi : 1.0
+            version : 1.0
         """)
 
 cpass = configparser.RawConfigParser()
-cpass.baca('config.data')
+cpass.read('config.data')
 
-mencoba:
+try:
     api_id = cpass['cred']['id']
     api_hash = cpass['cred']['hash']
-    telepon = cpass['cred']['telepon']
-    klien = TelegramClient(telepon, api_id, api_hash)
-kecuali KeyError:
-    os.system('hapus')
-    spanduk()
-    print(re+"[!] jalankan python3 setup.py dulu!!\n")
-    sys.keluar(1)
+    phone = cpass['cred']['phone']
+    client = TelegramClient(phone, api_id, api_hash)
+except KeyError:
+    os.system('clear')
+    banner()
+    print(re+"[!] run python3 setup.py first !!\n")
+    sys.exit(1)
 
-klien.sambungkan()
-jika bukan client.is_user_authorized():
-    client.send_code_request(telepon)
-    os.system('hapus')
-    spanduk()
-    client.sign_in(phone, input(gr+'[+] Masukkan kode: '+re))
+client.connect()
+if not client.is_user_authorized():
+    client.send_code_request(phone)
+    os.system('clear')
+    banner()
+    client.sign_in(phone, input(gr+'[+] Enter the code: '+re))
  
-os.system('hapus')
-spanduk()
+os.system('clear')
+banner()
 input_file = sys.argv[1]
-pengguna = []
-dengan open(input_file, encoding='UTF-8') sebagai f:
-    baris = csv.reader(f,delimiter=",",lineterminator="\n")
-    berikutnya(baris, Tidak ada)
-    untuk baris dalam baris:
-        pengguna = {}
-        pengguna['nama pengguna'] = baris[0]
-        pengguna['id'] = int(baris[1])
-        pengguna['akses_hash'] = int(baris[2])
-        pengguna['nama'] = baris[3]
-        pengguna.tambahkan(pengguna)
+users = []
+with open(input_file, encoding='UTF-8') as f:
+    rows = csv.reader(f,delimiter=",",lineterminator="\n")
+    next(rows, None)
+    for row in rows:
+        user = {}
+        user['username'] = row[0]
+        user['id'] = int(row[1])
+        user['access_hash'] = int(row[2])
+        user['name'] = row[3]
+        users.append(user)
  
-obrolan = []
-last_date = Tidak ada
+chats = []
+last_date = None
 chunk_size = 200
-grup=[]
+groups=[]
  
-hasil = klien(GetDialogsRequest(
-             offset_date=tanggal_terakhir,
+result = client(GetDialogsRequest(
+             offset_date=last_date,
              offset_id=0,
              offset_peer=InputPeerEmpty(),
-             batas=potongan_ukuran,
+             limit=chunk_size,
              hash = 0
          ))
-obrolan.memperpanjang(hasil.obrolan)
+chats.extend(result.chats)
  
-untuk obrolan dalam obrolan:
-    mencoba:
-        jika chat.megagroup== Benar:
-            grup.tambahkan(obrolan)
-    kecuali:
-        melanjutkan
+for chat in chats:
+    try:
+        if chat.megagroup== True:
+            groups.append(chat)
+    except:
+        continue
  
-saya=0
-untuk grup dalam grup:
+i=0
+for group in groups:
     print(gr+'['+cy+str(i)+gr+']'+cy+' - '+group.title)
-    saya+=1
+    i+=1
 
-print(gr+'[+] Pilih grup untuk menambahkan anggota')
-g_index = input(gr+"[+] Masukkan Angka : "+re)
-target_group=grup[int(g_index)]
+print(gr+'[+] Choose a group to add members')
+g_index = input(gr+"[+] Enter a Number : "+re)
+target_group=groups[int(g_index)]
  
 target_group_entity = InputPeerChannel(target_group.id,target_group.access_hash)
  
-print(gr+"[1] tambahkan anggota dengan ID pengguna\n[2] tambahkan anggota dengan nama pengguna ")
-mode = int(input(gr+"Input : "+re))
+print(gr+"[1] add member by user ID\n[2] add member by username ")
+mode = int(input(gr+"Input : "+re)) 
 n = 0
  
-untuk pengguna di pengguna:
+for user in users:
     n += 1
-    jika n% 50 == 0:
-	    waktu.tidur(1)
-	    mencoba:
-	        print ("Menambahkan {}".format(pengguna['id']))
-	        jika modus == 1:
-	            jika pengguna['nama pengguna'] == "":
-	                melanjutkan
-	            user_to_add = client.get_input_entity(pengguna['nama pengguna'])
-	        modus elif == 2:
-	            user_to_add = InputPeerUser(pengguna['id'], pengguna['akses_hash'])
-	        kalau tidak:
-	            sys.exit(re+"[!] Mode Tidak Valid Dipilih. Silakan Coba Lagi.")
-	        klien(InviteToChannelRequest(target_group_entity,[user_to_add]))
-	        print(gr+"[+] Menunggu 5-10 Detik...")
-	        waktu.tidur(acak.rangkaian(5, 10))
-	    kecuali PeerFloodError:
-	        print(re+"[!] Mendapatkan Kesalahan Banjir dari telegram. \n[!] Skrip berhenti sekarang. \n[!] Silakan coba lagi setelah beberapa waktu.")
-	    kecuali UserPrivacyRestrictedError:
-	        print(re+"[!] Pengaturan privasi pengguna tidak mengizinkan Anda melakukan ini. Melewati.")
-	    kecuali:
+    if n % 50 == 0:
+	    time.sleep(1)
+	    try:
+	        print ("Adding {}".format(user['id']))
+	        if mode == 1:
+	            if user['username'] == "":
+	                continue
+	            user_to_add = client.get_input_entity(user['username'])
+	        elif mode == 2:
+	            user_to_add = InputPeerUser(user['id'], user['access_hash'])
+	        else:
+	            sys.exit(re+"[!] Invalid Mode Selected. Please Try Again.")
+	        client(InviteToChannelRequest(target_group_entity,[user_to_add]))
+	        print(gr+"[+] Waiting for 5-10 Seconds...")
+	        time.sleep(random.randrange(5, 10))
+	    except PeerFloodError:
+	        print(re+"[!] Getting Flood Error from telegram. \n[!] Script is stopping now. \n[!] Please try again after some time.")
+	    except UserPrivacyRestrictedError:
+	        print(re+"[!] The user's privacy settings do not allow you to do this. Skipping.")
+	    except:
 	        traceback.print_exc()
-	        print(re+"[!] Kesalahan Tak Terduga")
-	        melanjutkan
+	        print(re+"[!] Unexpected Error")
+	        continue
