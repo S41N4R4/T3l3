@@ -1,98 +1,98 @@
 #!/bin/env python3
-dari telethon.sync impor TelegramClient
-dari telethon.tl.types impor InputPeerUser
-dari telethon.errors.rpcerrorlist impor PeerFloodError
-impor configparser
-impor os, sys
-impor csv
-impor acak
-waktu impor
+from telethon.sync import TelegramClient
+from telethon.tl.types import InputPeerUser
+from telethon.errors.rpcerrorlist import PeerFloodError
+import configparser
+import os, sys
+import csv
+import random
+import time
 
 re="\033[1;31m"
 gr="\033[1;32m"
 cy="\033[1;36m"
 SLEEP_TIME = 30
 
-kelas utama():
+class main():
 
-    def spanduk():
+    def banner():
         
-        cetak(f"""
-    {re}╔╦╗{cy}┌─┐┬ ┌─┐{re}╔═╗ ╔═╗{cy}┌─┐┬─┐┌─┐┌─┐┌─┐┬─┐
-    {re} ║ {cy}├┤ │ ├┤ {re}║ ╦ ╚═╗{cy}│ ├┬┘├─┤├─┘├┤ ├┬┘
-    {re} ╩ {cy}└─┘┴─┘└─┘{re}╚═╝ ╚═╝{cy}└─┘┴└─┴ ┴┴ └─┘┴└─
+        print(f"""
+    {re}╔╦╗{cy}┌─┐┬  ┌─┐{re}╔═╗  ╔═╗{cy}┌─┐┬─┐┌─┐┌─┐┌─┐┬─┐
+    {re} ║ {cy}├┤ │  ├┤ {re}║ ╦  ╚═╗{cy}│  ├┬┘├─┤├─┘├┤ ├┬┘
+    {re} ╩ {cy}└─┘┴─┘└─┘{re}╚═╝  ╚═╝{cy}└─┘┴└─┴ ┴┴  └─┘┴└─
 
-                versi : 3.1
+                version : 3.1
     youtube.com/channel/UCnknCgg_3pVXS27ThLpw3xQ
             """)
 
     def send_sms():
-        mencoba:
+        try:
             cpass = configparser.RawConfigParser()
-            cpass.baca('config.data')
+            cpass.read('config.data')
             api_id = cpass['cred']['id']
             api_hash = cpass['cred']['hash']
-            telepon = cpass['cred']['telepon']
-        kecuali KeyError:
-            os.system('hapus')
+            phone = cpass['cred']['phone']
+        except KeyError:
+            os.system('clear')
             main.banner()
-            print(re+"[!] jalankan python3 setup.py dulu!!\n")
-            sys.keluar(1)
+            print(re+"[!] run python3 setup.py first !!\n")
+            sys.exit(1)
 
-        klien = TelegramClient(telepon, api_id, api_hash)
+        client = TelegramClient(phone, api_id, api_hash)
          
-        klien.sambungkan()
-        jika bukan client.is_user_authorized():
-            client.send_code_request(telepon)
-            os.system('hapus')
+        client.connect()
+        if not client.is_user_authorized():
+            client.send_code_request(phone)
+            os.system('clear')
             main.banner()
-            client.sign_in(phone, input(gr+'[+] Masukkan kode: '+re))
+            client.sign_in(phone, input(gr+'[+] Enter the code: '+re))
         
-        os.system('hapus')
+        os.system('clear')
         main.banner()
         input_file = sys.argv[1]
-        pengguna = []
-        dengan open(input_file, encoding='UTF-8') sebagai f:
-            baris = csv.reader(f,delimiter=",",lineterminator="\n")
-            berikutnya(baris, Tidak ada)
-            untuk baris dalam baris:
-                pengguna = {}
-                pengguna['nama pengguna'] = baris[0]
-                pengguna['id'] = int(baris[1])
-                pengguna['akses_hash'] = int(baris[2])
-                pengguna['nama'] = baris[3]
-                pengguna.tambahkan(pengguna)
-        print(gr+"[1] kirim sms dengan ID pengguna\n[2] kirim sms dengan nama pengguna ")
+        users = []
+        with open(input_file, encoding='UTF-8') as f:
+            rows = csv.reader(f,delimiter=",",lineterminator="\n")
+            next(rows, None)
+            for row in rows:
+                user = {}
+                user['username'] = row[0]
+                user['id'] = int(row[1])
+                user['access_hash'] = int(row[2])
+                user['name'] = row[3]
+                users.append(user)
+        print(gr+"[1] send sms by user ID\n[2] send sms by username ")
         mode = int(input(gr+"Input : "+re))
          
-        pesan = input(gr+"[+] Masukkan Pesan Anda : "+re)
+        message = input(gr+"[+] Enter Your Message : "+re)
          
-        untuk pengguna di pengguna:
-            jika modus == 2:
-                jika pengguna['nama pengguna'] == "":
-                    melanjutkan
-                penerima = client.get_input_entity(pengguna['nama pengguna'])
-            modus elif == 1:
-                penerima = InputPeerUser(pengguna['id'],pengguna['akses_hash'])
-            kalau tidak:
-                print(re+"[!] Mode Tidak Valid. Keluar.")
-                klien.putuskan()
-                sys.keluar()
-            mencoba:
-                print(gr+"[+] Mengirim Pesan ke:", user['nama'])
-                client.send_message(penerima, pesan.format(pengguna['nama']))
-                print(gr+"[+] Menunggu {} detik".format(SLEEP_TIME))
-                waktu.tidur(SLEEP_TIME)
-            kecuali PeerFloodError:
-                print(re+"[!] Mendapatkan Kesalahan Banjir dari telegram. \n[!] Skrip berhenti sekarang. \n[!] Silakan coba lagi setelah beberapa waktu.")
-                klien.putuskan()
-                sys.keluar()
-            kecuali Pengecualian sebagai e:
-                print(re+"[!] Kesalahan:", e)
-                print(re+"[!] Mencoba melanjutkan...")
-                melanjutkan
-        klien.putuskan()
-        print("Selesai. Pesan terkirim ke semua pengguna.")
+        for user in users:
+            if mode == 2:
+                if user['username'] == "":
+                    continue
+                receiver = client.get_input_entity(user['username'])
+            elif mode == 1:
+                receiver = InputPeerUser(user['id'],user['access_hash'])
+            else:
+                print(re+"[!] Invalid Mode. Exiting.")
+                client.disconnect()
+                sys.exit()
+            try:
+                print(gr+"[+] Sending Message to:", user['name'])
+                client.send_message(receiver, message.format(user['name']))
+                print(gr+"[+] Waiting {} seconds".format(SLEEP_TIME))
+                time.sleep(SLEEP_TIME)
+            except PeerFloodError:
+                print(re+"[!] Getting Flood Error from telegram. \n[!] Script is stopping now. \n[!] Please try again after some time.")
+                client.disconnect()
+                sys.exit()
+            except Exception as e:
+                print(re+"[!] Error:", e)
+                print(re+"[!] Trying to continue...")
+                continue
+        client.disconnect()
+        print("Done. Message sent to all users.")
 
 
 
